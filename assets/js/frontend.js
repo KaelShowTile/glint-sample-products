@@ -9,7 +9,6 @@ jQuery(function($) {
         
         $.post(cht_sample_frontend.ajax_url, {
             action: 'cht_add_sample_to_cart',
-            nonce: cht_sample_frontend.nonce,
             product_id: productId
         }, function(response) {
             if (response.success) {

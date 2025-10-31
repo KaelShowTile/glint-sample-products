@@ -25,7 +25,6 @@ class CHT_Sample_Products_Frontend {
             // Localize with settings
             wp_localize_script('cht-sample-products-frontend', 'cht_sample_frontend', [
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('cht_sample_frontend_nonce'),
                 'cart_url' => wc_get_cart_url(),
                 'i18n' => [
                     'adding' => __('Adding...', 'cht-sample-products'),
@@ -39,8 +38,6 @@ class CHT_Sample_Products_Frontend {
     }
 
     public static function add_sample_to_cart() {
-        check_ajax_referer('cht_sample_frontend_nonce', 'nonce');
-        
         $original_id = absint($_POST['product_id']);
         $sample_id = self::get_sample_product_id($original_id);
         

@@ -20,8 +20,7 @@ class CHT_Sample_Products_Product {
             );
             
             wp_localize_script('cht-sample-products-admin', 'cht_sample_products', [
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('cht_sample_products_nonce')
+                'ajax_url' => admin_url('admin-ajax.php')
             ]);
         }
     }
@@ -147,8 +146,6 @@ class CHT_Sample_Products_Product {
     }
 
     public static function create_sample_product() {
-        check_ajax_referer('cht_sample_products_nonce', 'nonce');
-        
         global $wpdb;
         $original_id = absint($_POST['product_id']);
         
@@ -211,8 +208,6 @@ class CHT_Sample_Products_Product {
     }
 
     public static function delete_sample_product() {
-        check_ajax_referer('cht_sample_products_nonce', 'nonce');
-        
         global $wpdb;
         $original_id = absint($_POST['product_id']);
         $table = $wpdb->prefix . 'glint_sample_product';

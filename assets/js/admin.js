@@ -8,7 +8,6 @@ jQuery(document).ready(function($) {
         
         $.post(cht_sample_products.ajax_url, {
             action: 'cht_create_sample_product',
-            nonce: cht_sample_products.nonce,
             product_id: productId
         }, function(response) {
             if (response.success) {
@@ -31,7 +30,6 @@ jQuery(document).ready(function($) {
         
         $.post(cht_sample_products.ajax_url, {
             action: 'cht_delete_sample_product',
-            nonce: cht_sample_products.nonce,
             product_id: productId
         }, function() {
             location.reload();
