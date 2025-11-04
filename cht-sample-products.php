@@ -40,3 +40,14 @@ if (!function_exists('cht_add_sample_btn')) {
         CHT_Sample_Products_Frontend::render_sample_button($product_id);
     }
 }
+
+if (!function_exists('cht_check_sample_id')) {
+    function cht_check_sample_id($product_id= null) {
+        if (!$product_id) {
+            global $product;
+            $product_id = $product->get_id();
+        }
+        error_log('get orginal product id is: ' . $product_id);
+        return CHT_Sample_Products_Frontend::get_sample_product_id($product_id);
+    }
+}

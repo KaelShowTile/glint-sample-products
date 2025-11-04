@@ -66,7 +66,7 @@ class CHT_Sample_Products_Frontend {
     public static function get_sample_product_id($original_id) {
         global $wpdb;
         $table = $wpdb->prefix . 'glint_sample_product';
-        
+
         return $wpdb->get_var($wpdb->prepare(
             "SELECT sample_product_id FROM $table WHERE original_product_id = %d",
             $original_id
@@ -80,7 +80,7 @@ class CHT_Sample_Products_Frontend {
         }
         
         $sample_id = self::get_sample_product_id($product_id);
-        
+
         if (!$sample_id) {
             return;
         }
