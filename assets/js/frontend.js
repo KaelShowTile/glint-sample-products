@@ -44,7 +44,7 @@ jQuery(function($) {
 
             } else {
                 button.prop('disabled', false).text(originalText);
-                alert('Error: ' + response.data.message);
+                alert(response.data.message);
             }
         }).fail(function() {
             button.prop('disabled', false).text(originalText);

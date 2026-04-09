@@ -28,15 +28,21 @@ class CHT_Sample_Products_Admin {
                 'sample_price' => wc_format_decimal($_POST['sample_price']),
                 'sample_shipping_class' => absint($_POST['sample_shipping_class']),
                 'after_add_to_cart' => sanitize_text_field($_POST['after_add_to_cart']),
-                'custom_action' => sanitize_text_field($_POST['custom_action'])
+                'custom_action' => sanitize_text_field($_POST['custom_action']),
+                'max_sample_quantity' => isset($_POST['max_sample_quantity']) ? absint($_POST['max_sample_quantity']) : 1
             ];
             
             foreach ($settings as $name => $value) {
-                $wpdb->update(
-                    $table,
-                    ['setting_value' => $value],
-                    ['setting_name' => $name]
-                );
+                $exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE setting_name = %s", $name));
+                if ($exists) {
+                    $wpdb->update(
+                        $table,
+                        ['setting_value' => $value],
+                        ['setting_name' => $name]
+                    );
+                } else {
+                    $wpdb->insert($table, ['setting_name' => $name, 'setting_value' => $value]);
+                }
             }
             echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
         }
@@ -48,6 +54,7 @@ class CHT_Sample_Products_Admin {
         // Set defaults
         $after_add_to_cart = $settings['after_add_to_cart'] ?? 'redirect';
         $custom_action = $settings['custom_action'] ?? '';
+        $max_sample_quantity = $settings['max_sample_quantity'] ?? 1;
         
         // Get categories and shipping classes
         $categories = get_terms([
@@ -102,6 +109,16 @@ class CHT_Sample_Products_Admin {
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="max_sample_quantity"><?php esc_html_e('Max Sample Quantity', 'cht-sample-products'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" name="max_sample_quantity" id="max_sample_quantity" 
+                                value="<?php echo esc_attr($max_sample_quantity); ?>" class="regular-text" min="1">
+                            <p class="description"><?php esc_html_e('Maximum number of each sample product a user can add to the cart.', 'cht-sample-products'); ?></p>
                         </td>
                     </tr>
                     <tr>

@@ -31,7 +31,8 @@ class CHT_Sample_Products_Activator {
             'sample_price' => '0',
             'sample_shipping_class' => '',
             'after_add_to_cart' => '',
-            'custom_action' => ''
+            'custom_action' => '',
+            'max_sample_quantity' => '1'
         ];
         
         foreach ($defaults as $name => $value) {

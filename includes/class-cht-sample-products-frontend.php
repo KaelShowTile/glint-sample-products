@@ -48,6 +48,24 @@ class CHT_Sample_Products_Frontend {
         // Get current cart contents
         $current_cart = WC()->cart->get_cart();
         
+        // Check maximum quantity limit
+        global $wpdb;
+        $table = $wpdb->prefix . 'glint_sample_product_setting';
+        $max_qty_row = $wpdb->get_row($wpdb->prepare("SELECT setting_value FROM $table WHERE setting_name = %s", 'max_sample_quantity'));
+        $max_qty = $max_qty_row ? (int) $max_qty_row->setting_value : 1;
+        
+        $current_qty = 0;
+        foreach ($current_cart as $cart_item) {
+            if ($cart_item['product_id'] == $sample_id) {
+                $current_qty += $cart_item['quantity'];
+            }
+        }
+        
+        if ($current_qty >= $max_qty) {
+            $error_message = sprintf(__('Sorry, only %d samples can be requested for each product.', 'cht-sample-products'), $max_qty);
+            wp_send_json_error(['message' => $error_message]);
+        }
+        
         // Add sample product to cart (preserving existing items)
         $added = WC()->cart->add_to_cart($sample_id, 1);
         
