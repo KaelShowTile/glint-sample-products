@@ -4,6 +4,12 @@ class CHT_Sample_Products_Frontend {
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_scripts']);
         add_action('wp_ajax_cht_add_sample_to_cart', [__CLASS__, 'add_sample_to_cart']);
         add_action('wp_ajax_nopriv_cht_add_sample_to_cart', [__CLASS__, 'add_sample_to_cart']);
+
+        // limit the max number of each sample product in cart page
+        add_filter('woocommerce_quantity_input_args', [__CLASS__, 'limit_sample_quantity_input'], 10, 2);
+        // Add validation of max number of each sample product
+        add_filter('woocommerce_update_cart_validation', [__CLASS__, 'validate_sample_cart_update'], 10, 4);
+        add_filter('woocommerce_add_to_cart_validation', [__CLASS__, 'validate_sample_add_to_cart'], 10, 3);
     }
 
     public static function enqueue_scripts() {
@@ -130,5 +136,82 @@ class CHT_Sample_Products_Frontend {
         }
         
         return has_term($sample_category, 'product_cat', $product_id);
+    }
+
+    public static function limit_sample_quantity_input($args, $product) {
+        if (self::is_sample_product($product->get_id())) {
+            global $wpdb;
+            $table = $wpdb->prefix . 'glint_sample_product_setting';
+            $max_qty_row = $wpdb->get_row($wpdb->prepare("SELECT setting_value FROM $table WHERE setting_name = %s", 'max_sample_quantity'));
+            $max_qty = $max_qty_row ? (int) $max_qty_row->setting_value : 1;
+            
+            $args['max_value'] = $max_qty;
+        }
+        return $args;
+    }
+
+    public static function validate_sample_cart_update($passed, $cart_item_key, $values, $quantity) {
+        if (self::is_sample_product($values['product_id'])) {
+            global $wpdb;
+            $table = $wpdb->prefix . 'glint_sample_product_setting';
+            $max_qty_row = $wpdb->get_row($wpdb->prepare("SELECT setting_value FROM $table WHERE setting_name = %s", 'max_sample_quantity'));
+            $max_qty = $max_qty_row ? (int) $max_qty_row->setting_value : 1;
+            
+            if ($quantity > $max_qty) {
+                $error_message = sprintf(__('Sorry, only %d samples can be requested for each product.', 'cht-sample-products'), $max_qty);
+                
+                // 针对 Mini Cart 等 AJAX 请求拦截并返回包含具体信息的 JSON
+                if (wp_doing_ajax()) {
+                    wp_send_json([
+                        'success' => false,
+                        'error'   => true,
+                        'message' => $error_message,
+                        'data'    => [
+                            'message' => $error_message,
+                            'error'   => $error_message // 兼容 Child Theme 中 JS 的 response.data.error
+                        ]
+                    ]);
+                }
+                return false;
+            }
+        }
+        return $passed;
+    }
+
+    public static function validate_sample_add_to_cart($passed, $product_id, $quantity) {
+        if (self::is_sample_product($product_id)) {
+            global $wpdb;
+            $table = $wpdb->prefix . 'glint_sample_product_setting';
+            $max_qty_row = $wpdb->get_row($wpdb->prepare("SELECT setting_value FROM $table WHERE setting_name = %s", 'max_sample_quantity'));
+            $max_qty = $max_qty_row ? (int) $max_qty_row->setting_value : 1;
+            
+            $current_cart = WC()->cart->get_cart();
+            $current_qty = 0;
+            foreach ($current_cart as $cart_item) {
+                if ($cart_item['product_id'] == $product_id) {
+                    $current_qty += $cart_item['quantity'];
+                }
+            }
+            
+            if (($current_qty + $quantity) > $max_qty) {
+                $error_message = sprintf(__('Sorry, only %d samples can be requested for each product.', 'cht-sample-products'), $max_qty);
+                
+                // 针对 AJAX 加入购物车请求，返回兼容格式的 JSON
+                if (wp_doing_ajax()) {
+                    wp_send_json([
+                        'success'     => false,
+                        'error'       => true,
+                        'message'     => $error_message,
+                        'data'        => [
+                            'message' => $error_message,
+                            'error'   => $error_message // 兼容 Child Theme 中 JS 的 response.data.error
+                        ],
+                        'product_url' => get_permalink($product_id)
+                    ]);
+                }
+                return false;
+            }
+        }
+        return $passed;
     }
 }
